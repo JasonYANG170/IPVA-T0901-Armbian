@@ -12,7 +12,7 @@ board=rv1126-evb-v13
 args=(
     BOARD="$board" BRANCH=vendor RELEASE=trixie BUILD_MINIMAL=yes BUILD_DESKTOP=no
     KERNEL_CONFIGURE=no KERNEL_GIT=shallow PREFER_DOCKER=no SHARE_LOG=no
-    "COMPRESS_OUTPUTIMAGE=sha,xz" CPUTHREADS=8
+    COMPRESS_OUTPUTIMAGE=sha CPUTHREADS=8 ARTIFACT_IGNORE_CACHE=yes
     IPVAT0901_KERNEL_REF="commit:$KERNEL_COMMIT" RKBIN_GIT_REF="commit:$RKBIN_COMMIT"
 )
 case "${1:-}" in
@@ -55,18 +55,25 @@ if (( EUID != 0 )); then
 fi
 "${privileged[@]}" ./compile.sh build "${args[@]}"
 
-install -d "$dist_dir/bootloader"
+install -d "$dist_dir/bootloader" "$dist_dir/rknpu"
 shopt -s nullglob
-images=(output/images/*_Rv1126-evb-v13_trixie_vendor_*_minimal.img.xz)
+images=(output/images/*_Rv1126-evb-v13_trixie_vendor_*_minimal.img)
 boot_packages=(output/debs/linux-u-boot-"$board"-vendor_*.deb)
 if (( ${#images[@]} != 1 || ${#boot_packages[@]} != 1 )); then
     printf 'Expected one board image and one U-Boot package. Use a fresh build/ directory.\n' >&2
     exit 1
 fi
-image=$(basename -- "${images[0]}")
-install -m 0644 "${images[0]}" "${images[0]}.sha" "$dist_dir"
+
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
+image=$(basename -- "${images[0]}")
+image="${image%.img}-galcore.img"
+cp --reflink=auto -- "${images[0]}" "$scratch/$image"
+kernel="$build_dir/cache/sources/linux-kernel-worktree/6.1__rockchip-rv1126__armhf"
+"${privileged[@]}" bash "$project_dir/scripts/build-rknpu-linux61.sh" "$kernel" "$scratch/rknpu"
+install -m 0644 "$scratch/rknpu/"galcore.ko{,.sha256} "$dist_dir/rknpu/"
+"${privileged[@]}" bash "$project_dir/scripts/install-galcore.sh" "$scratch/$image" "$dist_dir/rknpu/galcore.ko"
+
 dpkg-deb --extract "${boot_packages[0]}" "$scratch/deb"
 boot_dir=$(dirname -- "$(find "$scratch/deb/usr/lib" -name idbloader.img -print -quit)")
 for file in idbloader.img u-boot.itb u-boot-rockchip.bin u-boot-spl.bin; do
@@ -74,13 +81,15 @@ for file in idbloader.img u-boot.itb u-boot-rockchip.bin u-boot-spl.bin; do
 done
 
 cd -- "$dist_dir"
-sha256sum --check "$image.sha"
-xz -dc -- "$image" > "$scratch/${image%.xz}"
-"${privileged[@]}" bash "$project_dir/scripts/verify-image.sh" "$scratch/${image%.xz}" "$dist_dir/bootloader" \
+"${privileged[@]}" bash "$project_dir/scripts/verify-image.sh" "$scratch/$image" "$dist_dir/bootloader" \
     2>&1 | tee image-verification.txt
+xz -T4 -4 -- "$scratch/$image"
+image="$image.xz"
+install -m 0644 "$scratch/$image" .
 {
     cat "$project_dir/sources.env"
     printf 'IPVAT0901_COMMIT=%s\n' "$(git -C "$project_dir" rev-parse HEAD)"
 } > build-info.txt
-sha256sum -- "$image" bootloader/* > SHA256SUMS
+sha256sum -- "$image" bootloader/{idbloader.img,u-boot.itb,u-boot-rockchip.bin,u-boot-spl.bin} \
+    rknpu/galcore.ko build-info.txt image-verification.txt > SHA256SUMS
 sha256sum --check SHA256SUMS

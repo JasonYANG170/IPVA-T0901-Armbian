@@ -101,9 +101,11 @@ for module in video_rkisp video_rkispp; do
 done
 
 printf '\nRV1126 NPU configuration\n'
-fdtget -t s "$dtb" /npu@ffbc0000 compatible
-fdtget -t s "$dtb" /npu@ffbc0000 status
-printf 'RKNN inference requires a compatible galcore driver and an on-device model test.\n'
+test "$(fdtget -t s "$dtb" /npu@ffbc0000 compatible)" = rockchip,npu
+test "$(fdtget -t s "$dtb" /npu@ffbc0000 status)" = okay
+modprobe --dirname "$scratch" --set-version "$version" --resolve-alias \
+    'of:NnpuT(null)Crockchip,npu' | grep -Fx galcore
+modinfo -b "$scratch" -k "$version" -F filename galcore
 
 printf '\nFresh installation\n'
 test -f "$scratch/root/.not_logged_in_yet"

@@ -17,7 +17,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -36,20 +36,17 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-
       - name: Prepare build host
         run: |
-          # Remove unused mobile and language SDKs from this hosted runner.
           sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet /opt/ghc \
             /usr/local/share/boost /usr/local/share/powershell
           df -h .
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends device-tree-compiler kmod u-boot-tools
-
+          sudo apt-get install -y --no-install-recommends \
+            device-tree-compiler gcc-arm-linux-gnueabihf kmod u-boot-tools xz-utils
       - name: Build and verify image
         run: bash scripts/build.sh
-
-      - name: Upload image and bootloader
+      - name: Upload build artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: IPVAT0901-Armbian-trixie-armhf
@@ -57,7 +54,6 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
-
       - name: Upload build logs on failure
         if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -68,3 +64,28 @@ jobs:
             dist/image-verification.txt
           if-no-files-found: ignore
           retention-days: 7
+
+  release:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: IPVAT0901-Armbian-trixie-armhf
+          path: dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd dist && sha256sum -c SHA256SUMS)
+          mkdir release
+          install -m 0644 dist/*.img.xz dist/bootloader/* dist/rknpu/galcore.ko \
+            dist/build-info.txt dist/image-verification.txt release/
+          (cd release && sha256sum ./* > SHA256SUMS && sha256sum -c SHA256SUMS)
+          gh release create "build-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" release/* \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "IPVA-T0901 Armbian build $GITHUB_RUN_NUMBER" \
+            --notes "Debian Trixie armhf with Linux 6.1 and galcore. [Build log]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
