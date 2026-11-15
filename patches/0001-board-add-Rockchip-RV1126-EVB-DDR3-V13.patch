@@ -1,41 +1,26 @@
-From b997c4913a88278d29210aa98ce3ab5b67162197 Mon Sep 17 00:00:00 2001
-From: JasonYANG170 <39414350+JasonYANG170@users.noreply.github.com>
-Date: Sun, 15 Nov 2026 23:40:03 +0800
-Subject: [PATCH] board: add Rockchip RV1126 EVB DDR3 V13
-
-Reuse the RV1126 vendor kernel and U-Boot family. Add the eMMC boot profile and describe RMII, the IMX335 camera, and the status LEDs.
-
-Build the RV1126 camera pipeline and IMX335 driver as modules in the shared vendor kernel configuration.
----
- config/boards/rv1126-evb-v13.csc              |  12 +
- .../linux-rockchip-rv1126-vendor.config       |   9 +
- .../dt/rv1126-evb-v13-armbian.dts             | 135 ++++++++
- .../add-board-rv1126-evb-v13.patch            | 308 ++++++++++++++++++
- 4 files changed, 464 insertions(+)
- create mode 100644 config/boards/rv1126-evb-v13.csc
- create mode 100644 patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
- create mode 100644 patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
-
 diff --git a/config/boards/rv1126-evb-v13.csc b/config/boards/rv1126-evb-v13.csc
 new file mode 100644
-index 0000000..2900b10
+index 0000000000000000000000000000000000000000..7dccf2fa645ecfdd66b9e1aadcbd5770ff80cd90
 --- /dev/null
 +++ b/config/boards/rv1126-evb-v13.csc
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,15 @@
 +# Rockchip RV1126 quad-core Cortex-A7 vendor EVB DDR3 V13 hardware profile
 +BOARD_NAME="RV1126 EVB DDR3 V13"
 +BOARD_VENDOR="Rockchip"
 +BOARDFAMILY="rockchip-rv1126"
++# RV1126 RKNN inference requires the legacy galcore driver.
++# Build galcore for the vendor 6.1 kernel with build-rknpu-linux61.sh.
 +KERNEL_TARGET="vendor"
 +KERNEL_TEST_TARGET="vendor"
 +BOOT_FDT_FILE="rv1126-evb-v13-armbian.dtb"
 +BOOTCONFIG="rv1126-evb-v13_defconfig"
++RV1126_UBOOT_TAG="v2026.10"
 +IMAGE_PARTITION_TABLE="gpt"
 +
 +# The vendor ISP and ISPP drivers do not export OF module aliases.
 +MODULES_VENDOR="video_rkisp video_rkispp"
 diff --git a/config/kernel/linux-rockchip-rv1126-vendor.config b/config/kernel/linux-rockchip-rv1126-vendor.config
-index 71a616b..13443bc 100644
+index 71a616b8c571a9155cad9ce72445b2209fffb057..13443bc1bae56c45c9a2ff099e7a87ae0db9e4a3 100644
 --- a/config/kernel/linux-rockchip-rv1126-vendor.config
 +++ b/config/kernel/linux-rockchip-rv1126-vendor.config
 @@ -444,6 +444,15 @@ CONFIG_MEDIA_SUPPORT=y
@@ -54,9 +39,57 @@ index 71a616b..13443bc 100644
  CONFIG_USB_VIDEO_CLASS=y
  CONFIG_VIDEO_GC2053=y
  CONFIG_VIDEO_GC2093=y
+diff --git a/config/sources/families/rockchip-rv1126.conf b/config/sources/families/rockchip-rv1126.conf
+index 07ac803f50283f568da882fbedaa502f4d87926a..2dc01bd3edbf31b1467b95e680bd27276aa9a864 100644
+--- a/config/sources/families/rockchip-rv1126.conf
++++ b/config/sources/families/rockchip-rv1126.conf
+@@ -26,9 +26,10 @@ RKBIN_DIR="$SRC/cache/sources/rkbin-tools"
+ BOOTSCRIPT="boot-rv1126.cmd:boot.cmd"
+ BOOTENV_FILE="rv1126.txt"
+ BOOTSOURCE="https://github.com/u-boot/u-boot.git"
+-BOOTBRANCH="tag:v2026.07"
+-BOOTPATCHDIR="v2026.07"
+-BOOTDIR="u-boot-rockchip-rv1126-v2026.07"
++RV1126_UBOOT_TAG="${RV1126_UBOOT_TAG:-v2026.07}"
++BOOTBRANCH="tag:${RV1126_UBOOT_TAG}"
++BOOTPATCHDIR="${RV1126_UBOOT_TAG}"
++BOOTDIR="u-boot-rockchip-rv1126-${RV1126_UBOOT_TAG}"
+ 
+ DDR_BLOB="${DDR_BLOB:-"bin/rv11/rv1126_ddr_924MHz_v1.16.bin"}"
+ TEE_BLOB="${TEE_BLOB:-"bin/rv11/rv1126_tee_ta_v2.16.bin"}"
+@@ -47,24 +48,22 @@ CPUMIN="408000"
+ CPUMAX="1512000"
+ GOVERNOR="ondemand"
+ 
+-function uboot_make_config__rv1126_v2026_07_target_olddefconfig() {
+-	[[ "${BOOTPATCHDIR}" == "v2026.07" ]] || return 0
++function uboot_make_config__rv1126_target_olddefconfig() {
++	[[ "${BOOTPATCHDIR}" == "${RV1126_UBOOT_TAG}" ]] || return 0
+ 
+ 	display_alert "Completing RV1126 u-boot defaults" "${version} ${target_make}" "info"
+ 	run_host_command_logged "make ${target_make} olddefconfig ${cross_compile}"
+ }
+ 
+ uboot_custom_postprocess() {
+-	[[ "${BOOTPATCHDIR}" == "v2026.07" ]] || return 0
++	[[ "${BOOTPATCHDIR}" == "${RV1126_UBOOT_TAG}" ]] || return 0
+ 
+ 	for artifact in idbloader.img u-boot.itb u-boot-rockchip.bin spl/u-boot-spl.bin; do
+ 		[[ -s "${artifact}" ]] || exit_with_error "RV1126 mainline u-boot artifact is missing or empty: ${artifact}"
+ 	done
+ 
+-	if command -v strings > /dev/null 2>&1; then
+-		strings idbloader.img | grep -q "U-Boot SPL 2017.09" && exit_with_error "RV1126 idbloader.img contains legacy U-Boot SPL 2017.09"
+-		strings idbloader.img | grep -q "U-Boot SPL 2026.07" || exit_with_error "RV1126 idbloader.img does not contain U-Boot SPL 2026.07"
+-	fi
++	grep -aFq "U-Boot SPL ${RV1126_UBOOT_TAG#v}" idbloader.img ||
++		exit_with_error "RV1126 idbloader.img does not contain U-Boot SPL ${RV1126_UBOOT_TAG#v}"
+ 
+ 	local dumpimage_cmd=""
+ 	if command -v dumpimage > /dev/null 2>&1; then
 diff --git a/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts b/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
 new file mode 100644
-index 0000000..5bc52da
+index 0000000000000000000000000000000000000000..5bc52da71ddc8e91562b5d8399221fcf6d62a5da
 --- /dev/null
 +++ b/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
 @@ -0,0 +1,135 @@
@@ -195,11 +228,11 @@ index 0000000..5bc52da
 +&mipi_csi2_hw {
 +	status = "okay";
 +};
-diff --git a/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch b/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
+diff --git a/patch/u-boot/v2026.10/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch b/patch/u-boot/v2026.10/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
 new file mode 100644
-index 0000000..36f7820
+index 0000000000000000000000000000000000000000..36f7820a5213b2d3e6c15ab58df3544c91274c19
 --- /dev/null
-+++ b/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
++++ b/patch/u-boot/v2026.10/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
 @@ -0,0 +1,308 @@
 +From 2f6356d3c4a9965c0698dcc36e5a1121a50bb1ce Mon Sep 17 00:00:00 2001
 +From: JasonYANG170 <39414350+JasonYANG170@users.noreply.github.com>
@@ -509,6 +542,3 @@ index 0000000..36f7820
 ++#include <configs/rv1126_common.h>
 ++
 ++#endif /* __RV1126_EVB_V13_H */
--- 
-2.55.0.windows.5
-

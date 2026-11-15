@@ -9,6 +9,7 @@
 - **SoC**：Rockchip RV1126，四核 Cortex-A7，32 位 armhf
 - **系统**：Debian Trixie，vendor Linux 6.1.172
 - **板型**：RV1126 EVB DDR3 V13，支持 eMMC 启动、RMII 网口和 Sony IMX335
+- **引导**： U-Boot v2026.10
 - **设备树**：`rv1126-evb-v13-armbian.dtb`
 - **NPU**：移植版 `galcore` 驱动，推理使用 RV1126 的 RKNN 1.x 运行库
 - **UART2**：1500000 波特率，8N1

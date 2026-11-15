@@ -9,6 +9,7 @@ Armbian Minimal for the IPVA-T0901 camera board.
 - **SoC**: Rockchip RV1126, quad-core Cortex-A7, 32-bit armhf
 - **OS**: Debian Trixie with vendor Linux 6.1.172
 - **Board**: RV1126 EVB DDR3 V13, eMMC boot, RMII Ethernet, Sony IMX335
+- **Bootloader**: U-Boot v2026.10
 - **DTB**: `rv1126-evb-v13-armbian.dtb`
 - **NPU**: Ported `galcore` driver. Use the RV1126 RKNN 1.x runtime for inference.
 - **UART2**: 1500000 baud, 8N1
