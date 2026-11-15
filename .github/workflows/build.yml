@@ -1,0 +1,70 @@
+name: Build Armbian
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: armbian-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Check build inputs
+        run: |
+          shellcheck -x scripts/*.sh
+          bash scripts/build.sh --prepare-only
+
+  build:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Prepare build host
+        run: |
+          # Remove unused mobile and language SDKs from this hosted runner.
+          sudo rm -rf -- /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/share/boost /usr/local/share/powershell
+          df -h .
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends device-tree-compiler kmod u-boot-tools
+
+      - name: Build and verify image
+        run: bash scripts/build.sh
+
+      - name: Upload image and bootloader
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: IPVAT0901-Armbian-trixie-armhf
+          path: dist/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: build-logs
+          path: |
+            build/output/logs/*.log*
+            dist/image-verification.txt
+          if-no-files-found: ignore
+          retention-days: 7

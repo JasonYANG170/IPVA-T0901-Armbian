@@ -1,0 +1,29 @@
+--- a/config/sources/families/rockchip-rv1126.conf
++++ b/config/sources/families/rockchip-rv1126.conf
+@@ -32,13 +32,14 @@
+ 
+ DDR_BLOB="${DDR_BLOB:-"bin/rv11/rv1126_ddr_924MHz_v1.16.bin"}"
+ TEE_BLOB="${TEE_BLOB:-"bin/rv11/rv1126_tee_ta_v2.16.bin"}"
+-UBOOT_TARGET_MAP="ROCKCHIP_TPL=${RKBIN_DIR}/${DDR_BLOB} TEE=${RKBIN_DIR}/${TEE_BLOB};;idbloader.img u-boot.itb u-boot-rockchip.bin"
++UBOOT_TARGET_MAP="ROCKCHIP_TPL=${RKBIN_DIR}/${DDR_BLOB} TEE=${RKBIN_DIR}/${TEE_BLOB};;idbloader.img u-boot.itb u-boot-rockchip.bin spl/u-boot-spl.bin"
+ UBOOT_HASH_EXTRA="${UBOOT_HASH_EXTRA:-} ${DDR_BLOB} ${TEE_BLOB}"
+ 
+ case $BRANCH in
+ 
+ 	vendor*)
+ 		rockchip_vendor_kernel_config rv1126-vendor
++		KERNELBRANCH="${IPVAT0901_KERNEL_REF:-$KERNELBRANCH}"
+ 		;;
+ 
+ esac
+--- a/extensions/rkbin-tools.sh
++++ b/extensions/rkbin-tools.sh
+@@ -2,7 +2,7 @@
+ # @description Fetches the Rockchip `rkbin` repository (default `armbian/rkbin`) and installs the `loaderimage` and `trust_merger` host tools into `/usr/local/bin`, reinstalling only when the git commit changes. Needed to package Rockchip U-Boot/TPL/SPL images. Override the source with `RKBIN_GIT_URL` and `RKBIN_GIT_BRANCH`.
+ 
+ function fetch_sources_tools__rkbin_tools() {
+-	fetch_from_repo "${RKBIN_GIT_URL:-"https://github.com/armbian/rkbin"}" "rkbin-tools" "branch:${RKBIN_GIT_BRANCH:-"master"}"
++	fetch_from_repo "${RKBIN_GIT_URL:-"https://github.com/armbian/rkbin"}" "rkbin-tools" "${RKBIN_GIT_REF:-branch:${RKBIN_GIT_BRANCH:-master}}"
+ }
+ 
+ function build_host_tools__install_rkbin_tools() {

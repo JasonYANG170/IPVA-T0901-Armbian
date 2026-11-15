@@ -1,0 +1,514 @@
+From b997c4913a88278d29210aa98ce3ab5b67162197 Mon Sep 17 00:00:00 2001
+From: JasonYANG170 <39414350+JasonYANG170@users.noreply.github.com>
+Date: Sun, 15 Nov 2026 23:40:03 +0800
+Subject: [PATCH] board: add Rockchip RV1126 EVB DDR3 V13
+
+Reuse the RV1126 vendor kernel and U-Boot family. Add the eMMC boot profile and describe RMII, the IMX335 camera, and the status LEDs.
+
+Build the RV1126 camera pipeline and IMX335 driver as modules in the shared vendor kernel configuration.
+---
+ config/boards/rv1126-evb-v13.csc              |  12 +
+ .../linux-rockchip-rv1126-vendor.config       |   9 +
+ .../dt/rv1126-evb-v13-armbian.dts             | 135 ++++++++
+ .../add-board-rv1126-evb-v13.patch            | 308 ++++++++++++++++++
+ 4 files changed, 464 insertions(+)
+ create mode 100644 config/boards/rv1126-evb-v13.csc
+ create mode 100644 patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
+ create mode 100644 patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
+
+diff --git a/config/boards/rv1126-evb-v13.csc b/config/boards/rv1126-evb-v13.csc
+new file mode 100644
+index 0000000..2900b10
+--- /dev/null
++++ b/config/boards/rv1126-evb-v13.csc
+@@ -0,0 +1,12 @@
++# Rockchip RV1126 quad-core Cortex-A7 vendor EVB DDR3 V13 hardware profile
++BOARD_NAME="RV1126 EVB DDR3 V13"
++BOARD_VENDOR="Rockchip"
++BOARDFAMILY="rockchip-rv1126"
++KERNEL_TARGET="vendor"
++KERNEL_TEST_TARGET="vendor"
++BOOT_FDT_FILE="rv1126-evb-v13-armbian.dtb"
++BOOTCONFIG="rv1126-evb-v13_defconfig"
++IMAGE_PARTITION_TABLE="gpt"
++
++# The vendor ISP and ISPP drivers do not export OF module aliases.
++MODULES_VENDOR="video_rkisp video_rkispp"
+diff --git a/config/kernel/linux-rockchip-rv1126-vendor.config b/config/kernel/linux-rockchip-rv1126-vendor.config
+index 71a616b..13443bc 100644
+--- a/config/kernel/linux-rockchip-rv1126-vendor.config
++++ b/config/kernel/linux-rockchip-rv1126-vendor.config
+@@ -444,6 +444,15 @@ CONFIG_MEDIA_SUPPORT=y
+ CONFIG_MEDIA_SUPPORT_FILTER=y
+ CONFIG_MEDIA_CAMERA_SUPPORT=y
+ CONFIG_MEDIA_USB_SUPPORT=y
++CONFIG_MEDIA_PLATFORM_SUPPORT=y
++CONFIG_MEDIA_PLATFORM_DRIVERS=y
++CONFIG_V4L_PLATFORM_DRIVERS=y
++CONFIG_VIDEO_ROCKCHIP_CIF=m
++CONFIG_VIDEO_ROCKCHIP_ISP=m
++CONFIG_VIDEO_ROCKCHIP_ISP_VERSION_V20=y
++CONFIG_VIDEO_ROCKCHIP_ISPP=m
++CONFIG_VIDEO_ROCKCHIP_ISPP_VERSION_V10=y
++CONFIG_VIDEO_IMX335=m
+ CONFIG_USB_VIDEO_CLASS=y
+ CONFIG_VIDEO_GC2053=y
+ CONFIG_VIDEO_GC2093=y
+diff --git a/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts b/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
+new file mode 100644
+index 0000000..5bc52da
+--- /dev/null
++++ b/patch/kernel/rv1126-vendor-6.1/dt/rv1126-evb-v13-armbian.dts
+@@ -0,0 +1,135 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/dts-v1/;
++
++#include <dt-bindings/leds/common.h>
++
++#include "rv1126.dtsi"
++#include "rv1126-evb-v13.dtsi"
++
++/ {
++	model = "Rockchip RV1126 EVB DDR3 V13";
++	compatible = "rockchip,rv1126-evb-ddr3-v13", "rockchip,rv1126";
++
++	aliases {
++		ethernet0 = &gmac;
++		serial2 = &uart2;
++	};
++
++	chosen {
++		stdout-path = "serial2:1500000n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-0 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_YELLOW>;
++			gpios = <&gpio1 RK_PD6 GPIO_ACTIVE_LOW>;
++			default-state = "off";
++		};
++
++		led-1 {
++			function = LED_FUNCTION_STATUS;
++			color = <LED_COLOR_ID_BLUE>;
++			gpios = <&gpio2 RK_PA0 GPIO_ACTIVE_LOW>;
++			default-state = "off";
++		};
++	};
++};
++
++&fiq_debugger {
++	status = "disabled";
++};
++
++&uart2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart2m1_xfer>;
++	status = "okay";
++};
++
++&gmac {
++	phy-mode = "rmii";
++	clock_in_out = "output";
++	snps,reset-gpio = <&gpio3 RK_PC5 GPIO_ACTIVE_LOW>;
++	snps,reset-delays-us = <0 50000 50000>;
++	assigned-clocks = <&cru CLK_GMAC_SRC>, <&cru CLK_GMAC_TX_RX>;
++	assigned-clock-parents = <&cru CLK_GMAC_SRC_M0>, <&cru RMII_MODE_CLK>;
++	assigned-clock-rates = <50000000>;
++	pinctrl-0 = <&rmiim0_miim &rmiim0_bus2 &rmii_extra_pins>;
++	/delete-property/ tx_delay;
++	/delete-property/ rx_delay;
++};
++
++&pinctrl {
++	ethernet {
++		rmii_extra_pins: rmii-extra-pins {
++			rockchip,pins = <3 RK_PC0 2 &pcfg_pull_none_drv_level_0>,
++					<3 RK_PC2 2 &pcfg_pull_none>;
++		};
++	};
++};
++
++&usbdrd_dwc3 {
++	dr_mode = "host";
++};
++
++&sfc {
++	status = "disabled";
++};
++
++&wireless_wlan {
++	status = "disabled";
++};
++
++/* This board uses the IMX335 in place of the EVB sensor options. */
++&ar0230 {
++	status = "disabled";
++};
++
++&ov4689 {
++	status = "disabled";
++};
++
++&os04a10 {
++	status = "disabled";
++};
++
++&csi_dphy1 {
++	status = "disabled";
++};
++
++&mipi_in_ucam0 {
++	remote-endpoint = <&imx335_out>;
++};
++
++&i2c1 {
++	imx335@1a {
++		compatible = "sony,imx335";
++		reg = <0x1a>;
++		clocks = <&cru CLK_MIPICSI_OUT>;
++		clock-names = "xvclk";
++		power-domains = <&power RV1126_PD_VI>;
++		pinctrl-names = "rockchip,camera_default";
++		pinctrl-0 = <&mipicsi_clk0>;
++		avdd-supply = <&vcc_avdd>;
++		dovdd-supply = <&vcc_dovdd>;
++		dvdd-supply = <&vcc_dvdd>;
++		reset-gpios = <&gpio1 RK_PD5 GPIO_ACTIVE_LOW>;
++		rockchip,camera-module-index = <1>;
++		rockchip,camera-module-facing = "front";
++		rockchip,camera-module-name = "MTV4-IR-E-P";
++		rockchip,camera-module-lens-name = "40IRC-4MP-F16";
++
++		port {
++			imx335_out: endpoint {
++				remote-endpoint = <&mipi_in_ucam0>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++	};
++};
++
++&mipi_csi2_hw {
++	status = "okay";
++};
+diff --git a/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch b/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
+new file mode 100644
+index 0000000..36f7820
+--- /dev/null
++++ b/patch/u-boot/v2026.07/board_rv1126-evb-v13/add-board-rv1126-evb-v13.patch
+@@ -0,0 +1,308 @@
++From 2f6356d3c4a9965c0698dcc36e5a1121a50bb1ce Mon Sep 17 00:00:00 2001
++From: JasonYANG170 <39414350+JasonYANG170@users.noreply.github.com>
++Date: Sun, 15 Nov 2026 23:45:12 +0800
++Subject: [PATCH] rockchip: rv1126: add EVB DDR3 V13
++
++Add the EVB DDR3 V13 profile with UART2 and eMMC boot support.
++Reuse the RV1126 SPL setup from the EASY-EAI Nano.
++---
++ arch/arm/dts/rv1126-evb-v13-u-boot.dtsi       | 56 ++++++++++++
++ arch/arm/mach-rockchip/rv1126/Kconfig         |  7 ++
++ board/rockchip/rv1126-evb-v13/Kconfig         | 15 ++++
++ configs/rv1126-evb-v13_defconfig              | 65 ++++++++++++++
++ .../src/arm/rockchip/rv1126-evb-v13.dts       | 87 +++++++++++++++++++
++ include/configs/rv1126-evb-v13.h              | 10 +++
++ 6 files changed, 240 insertions(+)
++ create mode 100644 arch/arm/dts/rv1126-evb-v13-u-boot.dtsi
++ create mode 100644 board/rockchip/rv1126-evb-v13/Kconfig
++ create mode 100644 configs/rv1126-evb-v13_defconfig
++ create mode 100644 dts/upstream/src/arm/rockchip/rv1126-evb-v13.dts
++ create mode 100644 include/configs/rv1126-evb-v13.h
++
++diff --git a/arch/arm/dts/rv1126-evb-v13-u-boot.dtsi b/arch/arm/dts/rv1126-evb-v13-u-boot.dtsi
++new file mode 100644
++index 00000000..457808cb
++--- /dev/null
+++++ b/arch/arm/dts/rv1126-evb-v13-u-boot.dtsi
++@@ -0,0 +1,56 @@
+++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+++/*
+++ * Copyright (c) 2026 Nicolas Henrique
+++ */
+++
+++#include "rv1126-u-boot.dtsi"
+++
+++/ {
+++	chosen {
+++		u-boot,spl-boot-order = "same-as-spl", &sdmmc, &emmc;
+++	};
+++};
+++
+++&emmc {
+++	bootph-pre-ram;
+++};
+++
+++&emmc_bus8 {
+++	bootph-pre-ram;
+++};
+++
+++&emmc_clk {
+++	bootph-pre-ram;
+++};
+++
+++&emmc_cmd {
+++	bootph-pre-ram;
+++};
+++
+++&emmc_rstnout {
+++	bootph-pre-ram;
+++};
+++
+++&sdmmc {
+++	bootph-pre-ram;
+++};
+++
+++&sdmmc0_bus4 {
+++	bootph-pre-ram;
+++};
+++
+++&sdmmc0_clk {
+++	bootph-pre-ram;
+++};
+++
+++&sdmmc0_cmd {
+++	bootph-pre-ram;
+++};
+++
+++&sdio {
+++	status = "disabled";
+++};
+++
+++&uart2 {
+++	bootph-pre-ram;
+++};
++diff --git a/arch/arm/mach-rockchip/rv1126/Kconfig b/arch/arm/mach-rockchip/rv1126/Kconfig
++index 43eeaa9c..39373d0f 100644
++--- a/arch/arm/mach-rockchip/rv1126/Kconfig
+++++ b/arch/arm/mach-rockchip/rv1126/Kconfig
++@@ -21,6 +21,12 @@ config TARGET_RV1126_SONOFF_IHOST
++ 	  It features Wifi, Bluetooth and Zigbee radios that are used by many
++ 	  smart home devices.
++ 
+++config TARGET_RV1126_EVB_V13
+++	bool "RV1126 EVB DDR3 V13"
+++	help
+++	  RV1126 EVB DDR3 V13 uses Rockchip RV1126 with DDR3, eMMC and a UART2 console.
+++	  An SD card is supported when present on the carrier.
+++
++ config SOC_SPECIFIC_OPTIONS # dummy
++ 	def_bool y
++ 	select HAS_CUSTOM_SYS_INIT_SP_ADDR
++@@ -63,5 +69,6 @@ config TEXT_BASE
++ 
++ source "board/edgeble/neural-compute-module-2/Kconfig"
++ source "board/itead/sonoff-ihost/Kconfig"
+++source "board/rockchip/rv1126-evb-v13/Kconfig"
++ 
++ endif
++diff --git a/board/rockchip/rv1126-evb-v13/Kconfig b/board/rockchip/rv1126-evb-v13/Kconfig
++new file mode 100644
++index 00000000..5edf2b5c
++--- /dev/null
+++++ b/board/rockchip/rv1126-evb-v13/Kconfig
++@@ -0,0 +1,15 @@
+++if TARGET_RV1126_EVB_V13
+++
+++config SYS_BOARD
+++	default "rv1126-evb-v13"
+++
+++config SYS_VENDOR
+++	default "rockchip"
+++
+++config SYS_CONFIG_NAME
+++	default "rv1126-evb-v13"
+++
+++config BOARD_SPECIFIC_OPTIONS # dummy
+++	def_bool y
+++
+++endif
++diff --git a/configs/rv1126-evb-v13_defconfig b/configs/rv1126-evb-v13_defconfig
++new file mode 100644
++index 00000000..26d7296b
++--- /dev/null
+++++ b/configs/rv1126-evb-v13_defconfig
++@@ -0,0 +1,65 @@
+++CONFIG_ARM=y
+++CONFIG_SPL_SKIP_LOWLEVEL_INIT_ONLY=y
+++CONFIG_TPL_SKIP_LOWLEVEL_INIT_ONLY=y
+++CONFIG_COUNTER_FREQUENCY=24000000
+++CONFIG_SYS_ARCH_TIMER=y
+++CONFIG_ARCH_ROCKCHIP=y
+++CONFIG_NR_DRAM_BANKS=2
+++CONFIG_DEFAULT_DEVICE_TREE="rockchip/rv1126-evb-v13"
+++CONFIG_SYS_MONITOR_LEN=614400
+++CONFIG_ROCKCHIP_RV1126=y
+++CONFIG_ROCKCHIP_EXTERNAL_TPL=y
+++CONFIG_TARGET_RV1126_EVB_V13=y
+++CONFIG_SYS_BOOTM_LEN=0x4000000
+++CONFIG_SYS_LOAD_ADDR=0xe00800
+++CONFIG_DEBUG_UART_BASE=0xff570000
+++CONFIG_DEBUG_UART_CLOCK=24000000
+++CONFIG_DEBUG_UART=y
+++CONFIG_FIT_VERBOSE=y
+++CONFIG_USE_BOOTCOMMAND=y
+++CONFIG_BOOTCOMMAND="setenv scriptaddr 0x02000000; setenv devtype mmc; setenv distro_bootpart 1; setenv prefix /boot/; for devnum in 1 0; do if mmc dev ${devnum}; then if load mmc ${devnum}:1 ${scriptaddr} /boot/boot.scr; then setenv devnum ${devnum}; echo Boot script loaded from mmc ${devnum}:1; source ${scriptaddr}; fi; fi; done; echo No Armbian boot script found"
+++CONFIG_SPL_LOAD_FIT=y
+++CONFIG_BOOTDELAY=1
+++CONFIG_DEFAULT_FDT_FILE="rv1126-evb-v13.dtb"
+++# CONFIG_DISPLAY_CPUINFO is not set
+++CONFIG_DISPLAY_BOARDINFO_LATE=y
+++CONFIG_SPL_NO_BSS_LIMIT=y
+++# CONFIG_SPL_RAW_IMAGE_SUPPORT is not set
+++# CONFIG_SPL_SHARES_INIT_SP_ADDR is not set
+++# CONFIG_CMD_BOOTD is not set
+++# CONFIG_CMD_ELF is not set
+++# CONFIG_CMD_IMI is not set
+++# CONFIG_CMD_XIMG is not set
+++CONFIG_CMD_GPT=y
+++# CONFIG_CMD_LOADB is not set
+++# CONFIG_CMD_LOADS is not set
+++CONFIG_CMD_MMC=y
+++CONFIG_CMD_PART=y
+++CONFIG_CMD_SOURCE=y
+++CONFIG_CMD_BOOTZ=y
+++CONFIG_LEGACY_IMAGE_FORMAT=y
+++CONFIG_CMD_EXT4=y
+++CONFIG_CMD_FS_GENERIC=y
+++# CONFIG_CMD_ITEST is not set
+++# CONFIG_CMD_SETEXPR is not set
+++# CONFIG_SPL_DOS_PARTITION is not set
+++# CONFIG_ISO_PARTITION is not set
+++CONFIG_EFI_PARTITION_ENTRIES_NUMBERS=64
+++CONFIG_OF_SPL_REMOVE_PROPS="clock-names interrupt-parent assigned-clocks assigned-clock-rates assigned-clock-parents"
+++CONFIG_ENV_IS_NOWHERE=y
+++CONFIG_ENV_RELOC_GD_ENV_ADDR=y
+++CONFIG_ROCKCHIP_GPIO=y
+++CONFIG_SYS_I2C_ROCKCHIP=y
+++CONFIG_MISC=y
+++CONFIG_MMC_DW=y
+++CONFIG_MMC_DW_ROCKCHIP=y
+++CONFIG_REGULATOR_PWM=y
+++CONFIG_PWM_ROCKCHIP=y
+++# CONFIG_RAM_ROCKCHIP_DEBUG is not set
+++CONFIG_BAUDRATE=1500000
+++CONFIG_DEBUG_UART_SHIFT=2
+++CONFIG_SYSRESET=y
+++# CONFIG_TPL_SYSRESET is not set
+++CONFIG_DM_THERMAL=y
+++CONFIG_SPL_TINY_MEMSET=y
+++CONFIG_LZO=y
++diff --git a/dts/upstream/src/arm/rockchip/rv1126-evb-v13.dts b/dts/upstream/src/arm/rockchip/rv1126-evb-v13.dts
++new file mode 100644
++index 00000000..5a3470c8
++--- /dev/null
+++++ b/dts/upstream/src/arm/rockchip/rv1126-evb-v13.dts
++@@ -0,0 +1,87 @@
+++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+++/*
+++ * Copyright (c) 2026 Nicolas Henrique
+++ */
+++
+++/dts-v1/;
+++#include "rv1126.dtsi"
+++
+++/ {
+++	model = "RV1126 EVB DDR3 V13";
+++	compatible = "rockchip,rv1126-evb-ddr3-v13", "rockchip,rv1126";
+++
+++	aliases {
+++		mmc0 = &emmc;
+++		mmc1 = &sdmmc;
+++		serial2 = &uart2;
+++	};
+++
+++	chosen {
+++		stdout-path = "serial2:1500000n8";
+++	};
+++
+++	vcc3v3_sys: regulator-vcc3v3-sys {
+++		compatible = "regulator-fixed";
+++		regulator-name = "vcc3v3_sys";
+++		regulator-always-on;
+++		regulator-boot-on;
+++		regulator-min-microvolt = <3300000>;
+++		regulator-max-microvolt = <3300000>;
+++	};
+++
+++	vcc_1v8: regulator-vcc-1v8 {
+++		compatible = "regulator-fixed";
+++		regulator-name = "vcc_1v8";
+++		regulator-always-on;
+++		regulator-boot-on;
+++		regulator-min-microvolt = <1800000>;
+++		regulator-max-microvolt = <1800000>;
+++	};
+++
+++	vcc3v3_sd: regulator-vcc3v3-sd {
+++		compatible = "regulator-fixed";
+++		regulator-name = "vcc3v3_sd";
+++		regulator-always-on;
+++		regulator-boot-on;
+++		regulator-min-microvolt = <3300000>;
+++		regulator-max-microvolt = <3300000>;
+++	};
+++};
+++
+++&emmc {
+++	bus-width = <8>;
+++	cap-mmc-highspeed;
+++	disable-wp;
+++	max-frequency = <52000000>;
+++	non-removable;
+++	pinctrl-names = "default";
+++	pinctrl-0 = <&emmc_bus8 &emmc_cmd &emmc_clk &emmc_rstnout>;
+++	rockchip,default-sample-phase = <90>;
+++	vmmc-supply = <&vcc3v3_sys>;
+++	vqmmc-supply = <&vcc_1v8>;
+++	status = "okay";
+++};
+++
+++&sdmmc {
+++	bus-width = <4>;
+++	cap-sd-highspeed;
+++	disable-wp;
+++	max-frequency = <50000000>;
+++	no-mmc;
+++	no-sdio;
+++	pinctrl-names = "default";
+++	pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_bus4 &sdmmc0_det>;
+++	rockchip,default-sample-phase = <90>;
+++	vmmc-supply = <&vcc3v3_sd>;
+++	status = "okay";
+++};
+++
+++&uart2 {
+++	pinctrl-names = "default";
+++	pinctrl-0 = <&uart2m1_xfer>;
+++	status = "okay";
+++};
+++
+++&wdt {
+++	status = "okay";
+++};
++diff --git a/include/configs/rv1126-evb-v13.h b/include/configs/rv1126-evb-v13.h
++new file mode 100644
++index 00000000..0a0d92b9
++--- /dev/null
+++++ b/include/configs/rv1126-evb-v13.h
++@@ -0,0 +1,10 @@
+++/* SPDX-License-Identifier: GPL-2.0+ */
+++
+++#ifndef __RV1126_EVB_V13_H
+++#define __RV1126_EVB_V13_H
+++
+++#define ROCKCHIP_DEVICE_SETTINGS
+++
+++#include <configs/rv1126_common.h>
+++
+++#endif /* __RV1126_EVB_V13_H */
+-- 
+2.55.0.windows.5
+

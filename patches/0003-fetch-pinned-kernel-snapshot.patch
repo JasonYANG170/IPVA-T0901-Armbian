@@ -1,0 +1,22 @@
+Subject: [PATCH] Fetch only the pinned kernel snapshot for shallow builds
+
+diff --git a/lib/functions/compilation/kernel-git.sh b/lib/functions/compilation/kernel-git.sh
+--- a/lib/functions/compilation/kernel-git.sh
++++ b/lib/functions/compilation/kernel-git.sh
+@@ -17,6 +17,16 @@ function kernel_prepare_git() {
+ 
+ 	display_alert "Downloading sources" "kernel" "git"
+ 
++	# A pinned revision missing from the shallow bundle needs no history.
++	if [[ "$KERNEL_GIT" == shallow && "$KERNELBRANCH" == commit:* ]]; then
++		local revision="${KERNELBRANCH#commit:}"
++		if ! git -C "$kernel_git_bare_tree" cat-file -e "${revision}^{commit}" 2>/dev/null; then
++			display_alert "Fetching pinned kernel snapshot" "$revision" "info"
++			(cd "$kernel_git_bare_tree" && improved_git_fetch --depth=1 --no-tags "$KERNELSOURCE" "$revision") ||
++				exit_with_error "Could not fetch the pinned kernel snapshot" "$revision"
++		fi
++	fi
++
+ 	GIT_FIXED_WORKDIR="${LINUXSOURCEDIR}" \
+ 		GIT_EXPECTED_SHA1="${KERNEL_GIT_SHA1:-}" \
+ 		GIT_BARE_REPO_FOR_WORKTREE="${kernel_git_bare_tree}" \
