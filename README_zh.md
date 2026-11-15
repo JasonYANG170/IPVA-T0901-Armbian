@@ -19,4 +19,10 @@ bash scripts/build.sh
 
 开发版已实测 eMMC 启动、网口、IMX335 采集和两路状态灯。打包后的整盘镜像仍待实机复测。
 
+## RKNN 硬件推理
+
+当前 RV1126 vendor 6.1 镜像无法执行 RKNN 硬件推理。实机的 NPU 节点已启用，但没有绑定驱动，也没有 /dev/galcore。原厂 galcore 模块对应 Linux 4.19.111。需要与内核和运行库匹配的 RV1126 RKNPU v1 驱动。[Rockchip RKNPU v1 SDK](https://github.com/airockchip/rknpu)
+
+具备兼容驱动后，先在实机确认 /dev/galcore 存在，再运行官方 MobileNet 示例的 run_rv1109_rv1126.sh，并记录实际推理输出。[Rockchip MobileNet demo](https://github.com/airockchip/rknpu/tree/64c0ec575f18d43e41a66e10b68aba4266f25386/rknn/rknn_api/examples/rknn_mobilenet_demo)
+
 依赖源码版本见 [sources.env](sources.env)。项目的构建结构参考了 [TorderTable-Armbian](https://github.com/JasonYANG170/TorderTable-Armbian)。

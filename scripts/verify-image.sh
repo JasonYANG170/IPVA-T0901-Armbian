@@ -100,6 +100,11 @@ for module in video_rkisp video_rkispp; do
     modinfo -b "$scratch" -k "$version" -F filename "$module"
 done
 
+printf '\nRV1126 NPU configuration\n'
+fdtget -t s "$dtb" /npu@ffbc0000 compatible
+fdtget -t s "$dtb" /npu@ffbc0000 status
+printf 'RKNN inference requires a compatible galcore driver and an on-device model test.\n'
+
 printf '\nFresh installation\n'
 test -f "$scratch/root/.not_logged_in_yet"
 if grep -q '^camtest:' "$scratch/etc/passwd"; then

@@ -19,4 +19,10 @@ Output goes to dist/. Verify it with sha256sum --check SHA256SUMS from that dire
 
 The development image was tested for eMMC boot, Ethernet, IMX335 capture, and both status LEDs. Booting the packaged image on hardware remains to be verified.
 
+## RKNN acceleration
+
+RKNN inference is currently unavailable on the RV1126 vendor 6.1 image. On the board, the enabled NPU device has no bound driver or /dev/galcore. The factory galcore module targets Linux 4.19.111. The kernel and runtime need a matching RV1126 RKNPU v1 driver. [Rockchip RKNPU v1 SDK](https://github.com/airockchip/rknpu)
+
+For hardware validation after a compatible driver is available, check that /dev/galcore is present and run run_rv1109_rv1126.sh with the vendor MobileNet model. Record the inference output. [Rockchip MobileNet demo](https://github.com/airockchip/rknpu/tree/64c0ec575f18d43e41a66e10b68aba4266f25386/rknn/rknn_api/examples/rknn_mobilenet_demo)
+
 The Armbian framework, vendor kernel, U-Boot and rkbin revisions are listed in [sources.env](sources.env). The build structure follows [TorderTable-Armbian](https://github.com/JasonYANG170/TorderTable-Armbian).

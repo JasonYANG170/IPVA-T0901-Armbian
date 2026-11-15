@@ -1,0 +1,22 @@
+From cbb34798f3d34de4d19ae58a57ca6c4d1acdcd7e Mon Sep 17 00:00:00 2001
+From: JasonYANG170 <39414350+JasonYANG170@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 00:38:26 +0800
+Subject: [PATCH] board: rv1126-evb-v13: document galcore requirement
+
+---
+ config/boards/rv1126-evb-v13.csc | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/config/boards/rv1126-evb-v13.csc b/config/boards/rv1126-evb-v13.csc
+index 2900b10..ce42408 100644
+--- a/config/boards/rv1126-evb-v13.csc
++++ b/config/boards/rv1126-evb-v13.csc
+@@ -2,6 +2,8 @@
+ BOARD_NAME="RV1126 EVB DDR3 V13"
+ BOARD_VENDOR="Rockchip"
+ BOARDFAMILY="rockchip-rv1126"
++# RV1126 RKNN inference requires the legacy galcore driver.
++# The vendor 6.1 kernel does not provide this driver.
+ KERNEL_TARGET="vendor"
+ KERNEL_TEST_TARGET="vendor"
+ BOOT_FDT_FILE="rv1126-evb-v13-armbian.dtb"
