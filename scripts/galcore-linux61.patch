@@ -1,0 +1,795 @@
+diff --git a/kernel-module-imx-gpu-viv-src/hal/kernel/gc_hal_kernel.c b/kernel-module-imx-gpu-viv-src/hal/kernel/gc_hal_kernel.c
+index dee60fa..9648212 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/kernel/gc_hal_kernel.c
++++ b/kernel-module-imx-gpu-viv-src/hal/kernel/gc_hal_kernel.c
+@@ -3316,7 +3316,7 @@ gckKERNEL_Dispatch(
+         Interface->u.Version.major = gcvVERSION_MAJOR;
+         Interface->u.Version.minor = gcvVERSION_MINOR;
+         Interface->u.Version.patch = gcvVERSION_PATCH;
+-        Interface->u.Version.build = gcvVERSION_BUILD;
++        Interface->u.Version.build = 293908; /* RV1126 factory userspace ABI */
+ #if gcmIS_DEBUG(gcdDEBUG_TRACE)
+         gcmkTRACE_ZONE(gcvLEVEL_INFO, gcvZONE_KERNEL,
+                        "KERNEL version %s", gcvVERSION_STRING);
+@@ -5520,7 +5520,7 @@ gckDEVICE_Version(
+     Interface->u.Version.major = gcvVERSION_MAJOR;
+     Interface->u.Version.minor = gcvVERSION_MINOR;
+     Interface->u.Version.patch = gcvVERSION_PATCH;
+-    Interface->u.Version.build = gcvVERSION_BUILD;
++    Interface->u.Version.build = 293908; /* RV1126 factory userspace ABI */
+ #if gcmIS_DEBUG(gcdDEBUG_TRACE)
+     gcmkTRACE_ZONE(gcvLEVEL_INFO, gcvZONE_KERNEL,
+                    "KERNEL version %s", gcvVERSION_STRING);
+diff --git a/kernel-module-imx-gpu-viv-src/hal/kernel/inc/gc_feature_database.h b/kernel-module-imx-gpu-viv-src/hal/kernel/inc/gc_feature_database.h
+index ff04ec2..dbc6178 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/kernel/inc/gc_feature_database.h
++++ b/kernel-module-imx-gpu-viv-src/hal/kernel/inc/gc_feature_database.h
+@@ -751,6 +751,353 @@ typedef struct
+ } gcsFEATURE_DATABASE;
+ 
+ static gcsFEATURE_DATABASE gChipInfo[] = {
++    /* RV1126 VIP8000, from the matching factory module. */
++    {
++        .chipID = 0x8000,
++        .chipVersion = 0x8003,
++        .productID = 0x5080009,
++        .ecoID = 0x4000000,
++        .customerID = 0xb5,
++        .TempRegisters = 0x40,
++        .ThreadCount = 0x100,
++        .NumShaderCores = 0x1,
++        .InstructionCount = 0x200,
++        .NumberOfConstants = 0x140,
++        .CoreCount = 0x1,
++        .LocalStorageSize = 0x10,
++        .L1CacheSize = 0x10,
++        .InstructionMemorySize = 0x200,
++        .ShaderPCLength = 0x14,
++        .USC_MAX_PAGES = 0x10,
++        .NumPixelPipes = 0x1,
++        .USC_CACHE_CONTROLLERS = 0x1,
++        .USC_BANKS = 0x2,
++        .Streams = 0x8,
++        .VaryingCount = 0x10,
++        .VertexOutputBufferSize = 0x400,
++        .VertexCacheSize = 0x10,
++        .RESULT_WINDOW_MAX_SIZE = 0x100,
++        .NNMadPerCore = 0x40,
++        .NNCoreCount = 0x4,
++        .NNCoreCount_INT8 = 0x4,
++        .NNCoreCount_INT16 = 0x4,
++        .NNInputBufferDepth = 0x9,
++        .NNAccumBufferDepth = 0x20,
++        .TPEngine_PwlLUTCount = 0x400,
++        .TPEngine_PwlLUTSize = 0x10,
++        .VIP_SRAM_SIZE = 0x40000,
++        .TPEngine_CoreCount = 0x2,
++        .NN_INIMAGE_OFFSET_BITS = 0x5,
++        .TP_REORDER_INIMAGE_SIZE = 0x200,
++        .NN_LANES_PER_OUT_CYCLE = 0x10,
++        .MAX_OT_NUMBER = 0x40,
++        .PHYSICAL_VIP_SRAM_WIDTH_IN_BYTE = 0x40,
++        .EQUIVALENT_VIP_SRAM_WIDTH_INBYTE = 0x20,
++        .TP_ZRL_BITS = 0x8,
++        .NN_ZRL_BITS = 0x8,
++        .LATENCY_HIDING_AT_FULL_AXI_BW = 0x80,
++        .AXI_BUS_WIDTH = 0x10,
++        .NN_KERNEL_X_SIZE = 0xf,
++        .NN_KERNEL_Y_SIZE = 0xf,
++        .NN_FC_KERNEL_Y_SIZE = 0xf,
++        .NN_KERNEL_Z_SIZE = 0xfffff,
++        .NN_X_OFFSET = 0x1f,
++        .NN_Y_OFFSET = 0x1f,
++        .DDR_KERNEL_BURST_SIZE = 0x100,
++        .OUTIMAGE_X_STRIDE_BITS = 0x10,
++        .OUTIMAGE_Y_STRIDE_BITS = 0x10,
++        .INIMAGE_X_STRIDE_BITS = 0x10,
++        .IMIMAGE_Y_STRIDE_BITS = 0x10,
++        .OUTIMAGE_X_SIZE_BITS = 0xd,
++        .OUTIMAGE_Y_SIZE_BITS = 0xd,
++        .OUTIMAGE_Z_SIZE_BITS = 0xe,
++        .INIMAGE_X_SIZE_BITS = 0xd,
++        .INIMAGE_Y_SIZE_BITS = 0xd,
++        .MAX_TILE_X_SIZE = 0x40,
++        .NN_CLUSTER_NUM_FOR_POWER_CONTROL = 0x1,
++        .productName = "RV1126",
++        .REG_Pipe3D = 1,
++        .REG_DXTTextureCompression = 1,
++        .REG_ZCompression = 1,
++        .REG_MSAA = 1,
++        .REG_ETC1TextureCompression = 1,
++        .REG_FastScaler = 1,
++        .REG_HighDynamicRange = 1,
++        .REG_YUV420Tiler = 1,
++        .REG_ModuleCG = 1,
++        .REG_ByteWrite2D = 1,
++        .REG_YUY2Averaging = 1,
++        .REG_ByteWrite3D = 1,
++        .REG_RsYuvTarget = 1,
++        .REG_FE20BitIndex = 1,
++        .REG_FlipY = 1,
++        .REG_DualReturnBus = 1,
++        .REG_EndiannessConfig = 1,
++        .REG_Texture8K = 1,
++        .REG_CorrectTextureConverter = 1,
++        .REG_SpecialMsaaLod = 1,
++        .REG_FastClearFlush = 1,
++        .REG_2DPE20 = 1,
++        .REG_Render8K = 1,
++        .REG_TileStatus2Bits = 1,
++        .REG_SeparateTileStatusWhenInterleaved = 1,
++        .REG_SuperTiled32x32 = 1,
++        .REG_CompressionFifoFixed = 1,
++        .REG_ExtraShaderInstructions0 = 1,
++        .REG_ShaderGetsW = 1,
++        .REG_ExtraShaderInstructions1 = 1,
++        .REG_DefaultReg0 = 1,
++        .REG_MC20 = 1,
++        .REG_BugFixes0 = 1,
++        .REG_CorrectStencil = 1,
++        .REG_EnhanceVR = 1,
++        .REG_RSUVSwizzle = 1,
++        .REG_V2Compression = 1,
++        .REG_BugFixes1 = 1,
++        .REG_BugFixes2 = 1,
++        .REG_BugFixes3 = 1,
++        .REG_CorrectAutoDisable1 = 1,
++        .REG_BugFixes4 = 1,
++        .REG_HalfFloatPipe = 1,
++        .REG_PixelDither = 1,
++        .REG_TwoStencilReference = 1,
++        .REG_ExtendedPixelFormat = 1,
++        .REG_CorrectMinMaxDepth = 1,
++        .REG_DitherAndFilterPlusAlpha2D = 1,
++        .REG_BugFixes5 = 1,
++        .REG_NewFloatingPointArithmetic = 1,
++        .REG_TextureHorizontalAlignmentSelect = 1,
++        .REG_NonPowerOfTwo = 1,
++        .REG_LinearTextureSupport = 1,
++        .REG_Halti0 = 1,
++        .REG_NegativeLogFix = 1,
++        .REG_ResolveOffset = 1,
++        .REG_OkToGateAxiClock = 1,
++        .REG_MMU = 1,
++        .REG_WideLine = 1,
++        .REG_BugFixes6 = 1,
++        .REG_FcFlushStall = 1,
++        .REG_LineLoop = 1,
++        .REG_LogicOp = 1,
++        .REG_SeamlessCubeMap = 1,
++        .REG_SuperTiledTexture = 1,
++        .REG_LinearPE = 1,
++        .REG_RectPrimitive = 1,
++        .REG_CorrectAutoDisableCountWidth = 1,
++        .REG_PESwizzle = 1,
++        .REG_EndEvent = 1,
++        .REG_S1S8 = 1,
++        .REG_Halti1 = 1,
++        .REG_TX_YUVAssembler = 1,
++        .REG_DynamicFrequencyScaling = 1,
++        .REG_FullDirectFB = 1,
++        .REG_ThreadWalkerInPS = 1,
++        .REG_TileFiller = 1,
++        .REG_YUVStandard = 1,
++        .REG_FlushFixed2D = 1,
++        .REG_Interleaver = 1,
++        .REG_MixedStreams = 1,
++        .REG_BugFixes7 = 1,
++        .REG_TextureTileStatus = 1,
++        .REG_DecompressZ16 = 1,
++        .REG_BugFixes8 = 1,
++        .REG_DERotationStallFix = 1,
++        .REG_NewFeatures0 = 1,
++        .REG_InstructionCache = 1,
++        .REG_TexCompressionSupertiled = 1,
++        .REG_Generics = 1,
++        .REG_BugFixes9 = 1,
++        .REG_BugFixes10 = 1,
++        .REG_UnifiedSamplers = 1,
++        .REG_BugFixes11 = 1,
++        .REG_PerformanceCounters = 1,
++        .REG_ExtraShaderInstructions2 = 1,
++        .REG_BugFixes12 = 1,
++        .REG_BugFixes13 = 1,
++        .REG_DEEnhancements1 = 1,
++        .REG_ACE = 1,
++        .REG_TXEnhancements1 = 1,
++        .REG_SHEnhancements1 = 1,
++        .REG_SHEnhancements2 = 1,
++        .REG_PEEnhancements1 = 1,
++        .REG_DEEnhancements2 = 1,
++        .REG_BugFixes14 = 1,
++        .REG_NewHZ = 1,
++        .REG_BugFixes15 = 1,
++        .REG_SHEnhancements3 = 1,
++        .REG_SHEnhancements4 = 1,
++        .REG_TXEnhancements2 = 1,
++        .REG_FEEnhancements1 = 1,
++        .REG_PEEnhancements2 = 1,
++        .REG_PAEnhancements1 = 1,
++        .REG_PEEnhancements3 = 1,
++        .REG_HIEnhancements1 = 1,
++        .REG_TXEnhancements3 = 1,
++        .REG_SHEnhancements5 = 1,
++        .REG_FEEnhancements2 = 1,
++        .REG_BugFixes16 = 1,
++        .REG_TXEnhancements4 = 1,
++        .REG_MCEnhancements1 = 1,
++        .REG_Halti2 = 1,
++        .REG_SmallMSAA = 1,
++        .REG_BugFixes17 = 1,
++        .REG_PAEnhancements3 = 1,
++        .REG_BugFixes18 = 1,
++        .REG_MediumPrecision = 1,
++        .REG_BugFixes19 = 1,
++        .REG_SHEnhancements6 = 1,
++        .REG_SHEnhancements7 = 1,
++        .REG_BugFixes20 = 1,
++        .REG_EEZ = 1,
++        .REG_BugFixes21 = 1,
++        .REG_BugFixes22 = 1,
++        .REG_Halti3 = 1,
++        .REG_Halti4 = 1,
++        .REG_RAWriteDepth = 1,
++        .REG_HasChipProductReg = 1,
++        .REG_S8MSAACompression = 1,
++        .REG_BugFixesIn544 = 1,
++        .REG_FEAllowRndVtxCnt = 1,
++        .REG_TX6bitFrac = 1,
++        .REG_FEAllowStallPrefetchEng = 1,
++        .REG_RSS8 = 1,
++        .REG_MSAACoherencyCheck = 1,
++        .REG_Halti5 = 1,
++        .REG_Evis = 1,
++        .VMSAA = 1,
++        .RA_HZEZ_CLOCK_CONTROL = 1,
++        .CACHE128B256BPERLINE = 1,
++        .V4Compression = 1,
++        .PE_32BPC_COLORMASK_FIX = 1,
++        .ALPHA_BLENDING_OPT = 1,
++        .NEW_GPIPE = 1,
++        .NO_ASTC = 1,
++        .RA_DEPTH_WRITE_MSAA1X_FIX = 1,
++        .EZHZ_CLOCKGATE_FIX = 1,
++        .SH_SNAP2PAGE_FIX = 1,
++        .SH_HALFDEPENDENCY_FIX = 1,
++        .USC_MCFILL_FIX = 1,
++        .TPG_TCPERF_FIX = 1,
++        .USC_MDFIFO_OVERFLOW_FIX = 1,
++        .SH_TEXLD_BARRIER_IN_CS_FIX = 1,
++        .RS_NEW_BASEADDR = 1,
++        .PE_8bpp_DUALPIPE_FIX = 1,
++        .SH_FLAT_INTERPOLATION_DUAL16_FIX = 1,
++        .USC_CONTINUOUS_FLUS_FIX = 1,
++        .PE_NO_ALPHA_TEST = 1,
++        .SH_FIX_LDEXP = 1,
++        .SUPPORT_MOVAI = 1,
++        .SH_SNAP2PAGE_MAXPAGES_FIX = 1,
++        .PE_RGBA16I_FIX = 1,
++        .BLT_8bpp_256TILE_FC_FIX = 1,
++        .PE_64bit_FENCE_FIX = 1,
++        .USC_FULL_CACHE_FIX = 1,
++        .TX_YUV_ASSEMBLER_10BIT = 1,
++        .FE_32bit_INDEX_FIX = 1,
++        .BLT_64bpp_MASKED_CLEAR_FIX = 1,
++        .SECURITY = 1,
++        .ROBUSTNESS = 1,
++        .USC_ATOMIC_FIX = 1,
++        .SH_PSO_MSAA1x_FIX = 1,
++        .USC_VX_PERF_FIX = 1,
++        .USC_GOS_ADDR_FIX = 1,
++        .TX_8bit_UVFrac = 1,
++        .TX_DESC_CACHE_CLOCKGATE_FIX = 1,
++        .RSBLT_MSAA_DECOMPRESSION = 1,
++        .DRAWID = 1,
++        .PSIO_SAMPLEMASK_IN_R0ZW_FIX = 1,
++        .TX_INTEGER_COORDINATE_V2 = 1,
++        .SH_NO_INDEX_CONST_ON_A0 = 1,
++        .SH_NO_ONECONST_LIMIT = 1,
++        .SH_IMG_LDST_ON_TEMP = 1,
++        .COMPUTE_ONLY = 1,
++        .SH_IMG_LDST_CLAMP = 1,
++        .SH_ICACHE_ALLOC_COUNT_FIX = 1,
++        .SH_ICACHE_PREFETCH = 1,
++        .PE_MSAA_OQ_FIX = 1,
++        .PSIO_MSAA_CL_FIX = 1,
++        .USC_DEFER_FILL_FIX = 1,
++        .SH_CLOCK_GATE_FIX = 1,
++        .PA_WIDELINE_FIX = 1,
++        .PE_DITHER_FIX2 = 1,
++        .RA_CG_FIX = 1,
++        .SECURITY_AHB = 1,
++        .PSCS_THROTTLE = 1,
++        .MSAA_FRAGMENT_OPERATION = 1,
++        .SH_IO_CG_FIX = 1,
++        .USC_EVICT_CTRL_FIFO_FLOP_RESET_FIX = 1,
++        .VIP_HW_FINAL_RELEASE = 1,
++        .NN_SINGLEPORT_ACCUMBUFFER = 1,
++        .NN_STRIDE_SUPPORT = 1,
++        .SWTILING_PHASE1 = 1,
++        .SWTILING_PHASE2 = 1,
++        .TP_REAL_INT16 = 1,
++        .TP_ROI_POOLING = 1,
++        .TP_MAX_POOLING_STRIDE1 = 1,
++        .TP_LRN = 1,
++        .TP_REORDER = 1,
++        .TF_QUANTIZATION = 1,
++        .NN_NONZERO_BORDER = 1,
++        .EVIS_VX2 = 1,
++        .TP_ENGINE = 1,
++        .VIP_V7 = 1,
++        .NN_FIRST_PIXEL_POOLING = 1,
++        .NN_ZDP3 = 1,
++        .SWTILING_PHASE3 = 1,
++        .COEF_COMPRESSION_ENHANCEMENT = 1,
++        .TP_COEF_COMPRESSION_ENHANCEMENT = 1,
++        .NN_COEF_DECOMPRESS_PERF2X = 1,
++        .TP_SMALLBATCH_PHASE1 = 1,
++        .OCB_COUNTER = 1,
++        .NN_NO_Z_LOCATION_OFFSET = 1,
++        .OCB_REMAP_PHYSICAL_ADDRESS = 1,
++        .NN_SLOW_OUTPUT = 1,
++        .NO_NARROW_POST_PROCESS_PIPE = 1,
++        .NN_DEPTHWISE_SUPPORT = 1,
++        .NN_XYDP0 = 1,
++        .NN_WRITE_WITHOUT_USC = 1,
++        .NN_HW_LIMITATION_NATIVE_KER_1x2_2x1 = 1,
++        .NN_SLICE_PADDING_TO_64BYTE_ALIGN = 1,
++        .NN_PER3DTILE_BUBBLE_FIX = 1,
++        .NN_CACHELINE_MODE_PERF_FIX = 1,
++        .NN_CONV1x1_PERF_FIX = 1,
++        .TP_REORDER_FIX = 1,
++        .NN_CONVOUT_FIFO_DEPTH_FIX = 1,
++        .NN_ZXDP3_KERNEL_READ_CONFLICT_FIX = 1,
++        .NN_ZDP3_NO_COMPRESS_FIX = 1,
++        .NN_ASYNC_COPY_PERF_FIX = 1,
++        .HI_REORDER_FIX = 1,
++        .TP_REORDER_LAYER_SUSPEND_FIX = 1,
++        .NN_ASYNC_COPY_MERGE_FIX = 1,
++        .USC_INVALIDATE_CACHE_LINE_FIX = 1,
++        .NN_ZDP_INIMAGE_SIZE_FIX = 1,
++        .IDLE_BEFORE_FLUSH_COMPLETE_FIX = 1,
++        .SMALL_BATCH_FLOPS_RESET_FIX = 1,
++        .OUTPUT_CONVERT_UINT8_INT8_TO_UINT16_INT16_FIX = 1,
++        .IMAGE_NOT_PACKED_IN_SRAM_FIX = 1,
++        .COEF_DELTA_CORD_OVERFLOW_ZRL_8BIT_FIX = 1,
++        .KERNEL_VIP_SRAM_READ_BW_LIMITATION_FIX = 1,
++        .USC_BOTTLENECK_FIX = 1,
++        .NN_TILE_NUM_BIGGER_THAN_1024_FIX = 1,
++        .NN_COMMAND_KERNEL_REQUEST_CONFICT_FIX = 1,
++        .TP_REORDER_INTILE_X_SIZE_512_FIX = 1,
++        .IMG_POP_PIPELINE_PAUSE_FIX = 1,
++        .FULLCACHE_KERNEL_INTERLEAVE_FIX = 1,
++        .DR_JD_DIFF_CONDITION_FOR_CACHELINE_MODE_PRE_FIX = 1,
++        .OUTIMAGE_X_BITWIDTH_LIMIT_FOR_NN_TRANSPOSE_FIX = 1,
++        .IMG_ADDR_NOT_WRAP_IF_OVER_OCB_ADDR_FIX = 1,
++        .NEGATIVE_POST_SHIFT_FIX = 1,
++        .INIMAGE_2DTILE_NOT_LESS_160PIXEL_FIX = 1,
++        .INIMG_NOT_64BYTE_ALIGN_CACHELINE_MODE_FIX = 1,
++        .NN_WASET_COEF_READ_WRITE_BANDWIDTH_128BYTE_VIPSRAM_IN_FULL_PATIAL_CACHE_MODE = 1,
++        .TP_FC_KERNEL_STREAM_MUST_LESS_THAN_OR_EQUAL_TO_64BYTE_WHEN_1BYTE_ALGINE_FIX = 1,
++        .NN_INT8_SCALE = 1,
++        .NN_POWER_ISOLATION = 1,
++        .ZRL_7BIT = 1,
++        .DDR_BURST_LEN_256B = 1,
++        .NN_NONZERO_MIRROR_BORDER = 1,
++        .IMAGE_PARTIAL_CACHE = 1,
++    },
+     /* gc320_5007 */
+     {
+         0x320, /* ChipID */
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_dma.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_dma.c
+index 7f794d6..132ac09 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_dma.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_dma.c
+@@ -395,7 +395,7 @@ _DmaUnmapUser(
+                 );
+     }
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     if (do_munmap(current->mm, (unsigned long)MdlMap->vmaAddr, Size) < 0)
+     {
+         gcmkTRACE_ZONE(
+@@ -404,7 +404,7 @@ _DmaUnmapUser(
+                 __FUNCTION__, __LINE__
+                 );
+     }
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ }
+ 
+@@ -429,14 +429,14 @@ _DmaMapUser(
+                     MAP_SHARED | MAP_NORESERVE,
+                     0);
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     userLogical = (gctPOINTER)do_mmap_pgoff(gcvNULL,
+                     0L,
+                     Mdl->numPages * PAGE_SIZE,
+                     PROT_READ | PROT_WRITE,
+                     MAP_SHARED,
+                     0);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ 
+     gcmkTRACE_ZONE(
+@@ -456,7 +456,7 @@ _DmaMapUser(
+         gcmkONERROR(gcvSTATUS_OUT_OF_MEMORY);
+     }
+ 
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     do
+     {
+         struct vm_area_struct *vma = find_vma(current->mm, (unsigned long)userLogical);
+@@ -478,7 +478,7 @@ _DmaMapUser(
+         MdlMap->vma = vma;
+     }
+     while (gcvFALSE);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ 
+ OnError:
+     if (gcmIS_ERROR(status) && userLogical)
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_gfp.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_gfp.c
+index 9c3dd85..e93b94f 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_gfp.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_gfp.c
+@@ -1001,7 +1001,7 @@ _GFPUnmapUser(
+                 );
+     }
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     if (do_munmap(current->mm, (unsigned long)MdlMap->vmaAddr, Size) < 0)
+     {
+         gcmkTRACE_ZONE(
+@@ -1010,7 +1010,7 @@ _GFPUnmapUser(
+                 __FUNCTION__, __LINE__
+                 );
+     }
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ 
+     MdlMap->vma = NULL;
+@@ -1037,14 +1037,14 @@ _GFPMapUser(
+                     MAP_SHARED | MAP_NORESERVE,
+                     0);
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     userLogical = (gctPOINTER)do_mmap_pgoff(NULL,
+                     0L,
+                     Mdl->numPages * PAGE_SIZE,
+                     PROT_READ | PROT_WRITE,
+                     MAP_SHARED,
+                     0);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ 
+     gcmkTRACE_ZONE(
+@@ -1068,7 +1068,7 @@ _GFPMapUser(
+         gcmkONERROR(gcvSTATUS_OUT_OF_MEMORY);
+     }
+ 
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     do
+     {
+         struct vm_area_struct *vma = find_vma(current->mm, (unsigned long)userLogical);
+@@ -1088,7 +1088,7 @@ _GFPMapUser(
+         MdlMap->vma = vma;
+     }
+     while (gcvFALSE);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ 
+     if (gcmIS_SUCCESS(status))
+     {
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_reserved_mem.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_reserved_mem.c
+index 3364bdf..bc87480 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_reserved_mem.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_reserved_mem.c
+@@ -298,12 +298,12 @@ reserved_mem_unmap_user(
+         printk("%s: vm_munmap failed\n", __func__);
+     }
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     if (do_munmap(current->mm, (unsigned long)MdlMap->vmaAddr - res->offset_in_page, res->size) < 0)
+     {
+         printk("%s: do_munmap failed\n", __func__);
+     }
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ }
+ 
+@@ -325,10 +325,10 @@ reserved_mem_map_user(
+     userLogical = (gctPOINTER)vm_mmap(NULL, 0L, res->size,
+                 PROT_READ | PROT_WRITE, MAP_SHARED | MAP_NORESERVE, 0);
+ #else
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     userLogical = (gctPOINTER)do_mmap_pgoff(NULL, 0L, res->size,
+                 PROT_READ | PROT_WRITE, MAP_SHARED, 0);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ #endif
+ 
+     gcmkTRACE_ZONE(
+@@ -348,7 +348,7 @@ reserved_mem_map_user(
+         gcmkONERROR(gcvSTATUS_OUT_OF_MEMORY);
+     }
+ 
+-    down_write(&current->mm->mmap_sem);
++    mmap_write_lock(current->mm);
+     do
+     {
+         struct vm_area_struct *vma = find_vma(current->mm, (unsigned long)userLogical);
+@@ -370,7 +370,7 @@ reserved_mem_map_user(
+         MdlMap->vma = vma;
+     }
+     while (gcvFALSE);
+-    up_write(&current->mm->mmap_sem);
++    mmap_write_unlock(current->mm);
+ 
+ OnError:
+     if (gcmIS_ERROR(status) && userLogical)
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
+index 0f5ac4a..9ed37e6 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
+@@ -141,7 +141,7 @@ static int import_page_map(struct um_desc *um,
+     if (!pages)
+         return -ENOMEM;
+ 
+-    down_read(&current->mm->mmap_sem);
++    mmap_read_lock(current->mm);
+ 
+     result = get_user_pages(
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
+@@ -159,7 +159,7 @@ static int import_page_map(struct um_desc *um,
+             pages,
+             NULL);
+ 
+-    up_read(&current->mm->mmap_sem);
++    mmap_read_unlock(current->mm);
+ 
+     if (result < page_count)
+     {
+@@ -240,9 +240,9 @@ static int import_pfn_map(struct um_desc *um,
+     if (!current->mm)
+         return -ENOTTY;
+ 
+-    down_read(&current->mm->mmap_sem);
++    mmap_read_lock(current->mm);
+     vma = find_vma(current->mm, addr);
+-    up_read(&current->mm->mmap_sem);
++    mmap_read_unlock(current->mm);
+ 
+     if (!vma)
+         return -ENOTTY;
+@@ -279,7 +279,7 @@ static int import_pfn_map(struct um_desc *um,
+     && LINUX_VERSION_CODE >= KERNEL_VERSION (4,11,0)
+         pud = pud_offset((p4d_t*)pgd, addr);
+ #else
+-        pud = pud_offset(pgd, addr);
++        pud = pud_offset(p4d_offset(pgd, addr), addr);
+ #endif
+         if (pud_none(*pud) || pud_bad(*pud))
+             goto err;
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debug.h b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debug.h
+index 3e596f9..e33305b 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debug.h
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debug.h
+@@ -59,7 +59,7 @@
+ #include <gc_hal_kernel_linux.h>
+ #include <linux/spinlock.h>
+ #include <linux/time.h>
+-#include <stdarg.h>
++#include <linux/stdarg.h>
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,0)
+ #include <linux/nmi.h>
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debugfs.h b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debugfs.h
+index 47e1234..9a1b016 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debugfs.h
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_debugfs.h
+@@ -53,7 +53,7 @@
+ *****************************************************************************/
+ 
+ 
+-#include <stdarg.h>
++#include <linux/stdarg.h>
+ 
+ #ifndef __gc_hal_kernel_debugfs_h_
+ #define __gc_hal_kernel_debugfs_h_
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_driver.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_driver.c
+index 5b0ae81..214bf84 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_driver.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_driver.c
+@@ -68,6 +68,7 @@
+ 
+ MODULE_DESCRIPTION("Vivante Graphics Driver");
+ MODULE_LICENSE("Dual MIT/GPL");
++MODULE_IMPORT_NS(DMA_BUF);
+ 
+ 
+ static struct class* gpuClass = NULL;
+@@ -1241,7 +1242,7 @@ static int __devinit gpu_probe(struct platform_device *pdev)
+     int ret = -ENODEV;
+     bool getPowerFlag = gcvFALSE;
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+-    static u64 dma_mask = DMA_BIT_MASK(40);
++    static u64 dma_mask = DMA_BIT_MASK(32);
+ #else
+     static u64 dma_mask = DMA_40BIT_MASK;
+ #endif
+@@ -1262,6 +1263,7 @@ static int __devinit gpu_probe(struct platform_device *pdev)
+     galcore_device = &pdev->dev;
+ 
+     galcore_device->dma_mask = &dma_mask;
++    galcore_device->coherent_dma_mask = dma_mask;
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
+     galcore_device->coherent_dma_mask = dma_mask;
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_linux.h b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_linux.h
+index b9edf7a..b6be376 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_linux.h
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_linux.h
+@@ -299,7 +299,7 @@ _ConvertLogical2Physical(
+     OUT gctPHYS_ADDR_T * Physical
+     );
+ 
+-gctBOOL
++gceSTATUS
+ _QuerySignal(
+     IN gckOS Os,
+     IN gctSIGNAL Signal
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_os.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_os.c
+index 1e24c22..5bf7932 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_os.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/gc_hal_kernel_os.c
+@@ -448,9 +448,9 @@ _QueryProcessPageTable(
+         if (!current->mm)
+             return gcvSTATUS_NOT_FOUND;
+ 
+-        down_read(&current->mm->mmap_sem);
++        mmap_read_lock(current->mm);
+         vma = find_vma(current->mm, logical);
+-        up_read(&current->mm->mmap_sem);
++        mmap_read_unlock(current->mm);
+ 
+         /* To check if mapped to user. */
+         if (!vma)
+@@ -467,7 +467,7 @@ _QueryProcessPageTable(
+     && LINUX_VERSION_CODE >= KERNEL_VERSION (4,11,0)
+         pud = pud_offset((p4d_t*)pgd, logical);
+ #else
+-        pud = pud_offset(pgd, logical);
++        pud = pud_offset(p4d_offset(pgd, logical), logical);
+ #endif
+         if (pud_none(*pud) || pud_bad(*pud))
+             return gcvSTATUS_NOT_FOUND;
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/rockchip/gc_hal_kernel_platform_rv1126.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/rockchip/gc_hal_kernel_platform_rv1126.c
+new file mode 100644
+index 0000000..9349630
+--- /dev/null
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/rockchip/gc_hal_kernel_platform_rv1126.c
+@@ -0,0 +1,109 @@
++// SPDX-License-Identifier: GPL-2.0-only
++#include <linux/clk.h>
++#include <linux/of.h>
++#include <linux/pm_runtime.h>
++#include <linux/regulator/consumer.h>
++
++#include "gc_hal_kernel_linux.h"
++#include "gc_hal_kernel_platform.h"
++
++static struct {
++    struct regulator *supply;
++    struct clk_bulk_data *clocks;
++    struct resource *registers;
++    int clock_count;
++    int irq;
++} rv1126;
++
++static gceSTATUS rv1126_get_power(gcsPLATFORM *platform)
++{
++    struct platform_device *pdev = platform->device;
++    struct device *dev = &pdev->dev;
++    int ret;
++
++    if (!of_machine_is_compatible("rockchip,rv1126"))
++        return gcvSTATUS_NOT_SUPPORTED;
++
++    rv1126.registers = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++    rv1126.irq = platform_get_irq(pdev, 0);
++    if (!rv1126.registers || rv1126.irq < 0)
++        return gcvSTATUS_NOT_FOUND;
++
++    rv1126.supply = devm_regulator_get(dev, "npu");
++    if (IS_ERR(rv1126.supply))
++        return gcvSTATUS_NOT_SUPPORTED;
++
++    rv1126.clock_count = devm_clk_bulk_get_all(dev, &rv1126.clocks);
++    if (rv1126.clock_count != 4)
++        return gcvSTATUS_NOT_SUPPORTED;
++
++    ret = regulator_enable(rv1126.supply);
++    if (ret)
++        return gcvSTATUS_NOT_SUPPORTED;
++
++    pm_runtime_enable(dev);
++    ret = pm_runtime_resume_and_get(dev);
++    if (ret < 0)
++        goto disable_runtime_pm;
++
++    ret = clk_bulk_prepare_enable(rv1126.clock_count, rv1126.clocks);
++    if (ret)
++        goto put_runtime_pm;
++
++    return gcvSTATUS_OK;
++
++put_runtime_pm:
++    pm_runtime_put_sync(dev);
++disable_runtime_pm:
++    pm_runtime_disable(dev);
++    regulator_disable(rv1126.supply);
++    return gcvSTATUS_NOT_SUPPORTED;
++}
++
++static gceSTATUS rv1126_put_power(gcsPLATFORM *platform)
++{
++    struct device *dev = &platform->device->dev;
++
++    clk_bulk_disable_unprepare(rv1126.clock_count, rv1126.clocks);
++    pm_runtime_put_sync(dev);
++    pm_runtime_disable(dev);
++    regulator_disable(rv1126.supply);
++    return gcvSTATUS_OK;
++}
++
++static gceSTATUS rv1126_adjust_param(gcsPLATFORM *platform, gcsMODULE_PARAMETERS *args)
++{
++    args->irqs[gcvCORE_MAJOR] = rv1126.irq;
++    args->registerBases[gcvCORE_MAJOR] = rv1126.registers->start;
++    args->registerSizes[gcvCORE_MAJOR] = resource_size(rv1126.registers);
++    return gcvSTATUS_OK;
++}
++
++static struct _gcsPLATFORM_OPERATIONS rv1126_ops = {
++    .adjustParam = rv1126_adjust_param,
++    .getPower = rv1126_get_power,
++    .putPower = rv1126_put_power,
++};
++
++static gcsPLATFORM rv1126_platform = {
++    .name = "rv1126",
++    .ops = &rv1126_ops,
++};
++
++static const struct of_device_id rv1126_match[] = {
++    { .compatible = "rockchip,npu" },
++    {}
++};
++MODULE_DEVICE_TABLE(of, rv1126_match);
++
++int gckPLATFORM_Init(struct platform_driver *driver, gcsPLATFORM **platform)
++{
++    driver->driver.of_match_table = rv1126_match;
++    *platform = &rv1126_platform;
++    return 0;
++}
++
++int gckPLATFORM_Terminate(gcsPLATFORM *platform)
++{
++    return 0;
++}

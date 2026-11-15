@@ -23,6 +23,6 @@ bash scripts/build.sh
 
 本地内存启动包可在 Linux 4.19.111 上运行原厂 RV1126 RKNPU v1 驱动和 VGG-16 硬件推理示例。测试在 initramfs 中进行，完成后重启回常规 Armbian。 [构建和启动说明](scripts/rv1126-rknpu-ramboot.md)
 
-vendor 6.1 镜像要直接运行 RKNN 推理，仍需兼容的 galcore 驱动。 [Rockchip RKNPU v1 SDK](https://github.com/airockchip/rknpu)
+实机已在 vendor Linux 6.1 上用移植后的 galcore 驱动运行原厂 RKNN 1.5.2 VGG-16 测试。模块须针对目标镜像的内核构建。[Linux 6.1 模块构建和实机验证](scripts/rv1126-rknpu-linux61.md)
 
 依赖源码版本见 [sources.env](sources.env)。项目的构建结构参考了 [TorderTable-Armbian](https://github.com/JasonYANG170/TorderTable-Armbian)。

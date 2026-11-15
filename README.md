@@ -23,6 +23,6 @@ The development image was tested for eMMC boot, Ethernet, IMX335 capture, and bo
 
 The local RAM boot package runs the factory RV1126 RKNPU v1 stack and the VGG-16 test on Linux 4.19.111. It runs from an initramfs and returns to the regular Armbian boot after the test. [Build and boot instructions](scripts/rv1126-rknpu-ramboot.md)
 
-The vendor 6.1 image still requires a compatible galcore driver for native RKNN inference. [Rockchip RKNPU v1 SDK](https://github.com/airockchip/rknpu)
+The native Linux 6.1 galcore port runs the factory RKNN 1.5.2 VGG-16 test on this board. Build the module against the kernel tree used for the target image. [Linux 6.1 module and test instructions](scripts/rv1126-rknpu-linux61.md)
 
 The Armbian framework, vendor kernel, U-Boot and rkbin revisions are listed in [sources.env](sources.env). The build structure follows [TorderTable-Armbian](https://github.com/JasonYANG170/TorderTable-Armbian).

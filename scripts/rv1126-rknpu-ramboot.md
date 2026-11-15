@@ -1,6 +1,6 @@
 # RV1126 RKNPU v1 内存启动测试
 
-此启动包使用 IPVAT0901 的原厂 4.19.111 内核、设备树、galcore 和 RKNN 运行库。启动后加载 /dev/galcore，执行原厂 VGG-16 示例，输出 Top 5 特征和耗时，再重启回常规的 Armbian。6.1 镜像中的 RKNN 原生推理仍需匹配的 RV1126 galcore 驱动。
+此启动包使用 IPVAT0901 的原厂 4.19.111 内核、设备树、galcore 和 RKNN 运行库。启动后加载 /dev/galcore，执行原厂 VGG-16 示例，输出 Top 5 特征和耗时，再重启回常规的 Armbian。6.1 镜像可使用单独构建的 galcore 模块。[Linux 6.1 构建与实机验证](rv1126-rknpu-linux61.md)
 
 在 WSL 或 Ubuntu 安装 python3、kmod、util-linux、fdisk、cpio、device-tree-compiler 和 u-boot-tools。运行构建脚本并指定原厂整盘备份、提取的原厂内核 DTB 和输出目录。
 
