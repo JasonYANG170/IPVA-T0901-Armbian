@@ -65,7 +65,7 @@ if (( ${#images[@]} != 1 || ${#boot_packages[@]} != 1 )); then
 fi
 
 scratch=$(mktemp -d)
-trap 'rm -rf -- "$scratch"' EXIT
+trap '"${privileged[@]}" rm -rf -- "$scratch"' EXIT
 image=$(basename -- "${images[0]}")
 image="${image%.img}-galcore.img"
 cp --reflink=auto -- "${images[0]}" "$scratch/$image"
