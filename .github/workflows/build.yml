@@ -79,13 +79,25 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
+          build_date=$(date -u +%Y%m%d)
+          tag="build-${build_date}-${GITHUB_SHA:0:7}"
+          draft=$(gh release view "$tag" --json isDraft --jq .isDraft 2>/dev/null || true)
+          if [[ "$draft" == false ]]; then
+            echo "Release $tag is already published."
+            exit 0
+          fi
           (cd dist && sha256sum -c SHA256SUMS)
           mkdir release
           install -m 0644 dist/*.img.xz dist/bootloader/* dist/rknpu/galcore.ko \
             dist/build-info.txt dist/image-verification.txt release/
           (cd release && sha256sum ./* > SHA256SUMS && sha256sum -c SHA256SUMS)
-          gh release create "build-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" release/* \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "IPVA-T0901 Armbian build $GITHUB_RUN_NUMBER" \
-            --notes "Debian Trixie armhf with Linux 6.1 and galcore. [Build log]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          if [[ "$draft" == true ]]; then
+            gh release upload "$tag" release/* --clobber
+            gh release edit "$tag" --draft=false
+          else
+            gh release create "$tag" release/* --target "$GITHUB_SHA" \
+              --title "IPVA-T0901 Armbian $build_date" \
+              --notes "Debian Trixie armhf with Linux 6.1 and galcore. [Build log]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          fi
